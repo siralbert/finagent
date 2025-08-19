@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1746752163748",
+    "name": "News Search Server",
+    "hostname": "http://localhost:8085/mcp",
+    "isActive": true,
+    "isConnected": true
+  },
+  {
+    "id": "1746752179230",
+    "name": "Financial Analysis Server",
+    "hostname": "http://localhost:8084/mcp",
+    "isActive": true,
+    "isConnected": true
+  },
+  {
+    "id": "1746767883939",
+    "name": "Stock Market Server",
+    "hostname": "http://localhost:8083/mcp",
+    "isActive": true,
+    "isConnected": true
+  },
+  {
+    "id": "1746770001234",
+    "name": "Word Generator Server",
+    "hostname": "http://localhost:8089/mcp",
+    "isActive": true,
+    "isConnected": true
+  }
+]
