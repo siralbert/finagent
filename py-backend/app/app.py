@@ -1,6 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from app.api_routes import thought_stream, mcp_servers, router, file_download
+from app.api_routes import transcription  # Add this import
 import os
 import logging
 import subprocess
@@ -24,6 +25,7 @@ logging.getLogger('router_api').setLevel(logging.INFO)
 logging.getLogger('thought_stream').setLevel(logging.INFO)
 logging.getLogger('strands_reasoning').setLevel(logging.INFO)
 logging.getLogger('graph').setLevel(logging.INFO)
+logging.getLogger('transcription_api').setLevel(logging.INFO)  # Add transcription logging
 # Keep these at WARNING to reduce noise
 logging.getLogger('botocore').setLevel(logging.WARNING)
 logging.getLogger('boto3').setLevel(logging.WARNING)
@@ -36,13 +38,14 @@ logger.addFilter(HealthCheckFilter())
 mcp_processes = {}
 workflow_graph = None
 
-app = FastAPI(title="Financial Agent API")
+app = FastAPI(title="Financial Agent API with Voice Support")
 
 # Include API routers
 app.include_router(thought_stream.router, prefix="/api/financial")
 app.include_router(mcp_servers.router, prefix="/api/mcp-servers", tags=["MCP Servers"])
 app.include_router(router.router, prefix="/api/router", tags=["Router"])
 app.include_router(file_download.router, prefix="/api/files", tags=["File Downloads"])
+app.include_router(transcription.router, prefix="/api/transcribe", tags=["Voice Transcription"])  # Add transcription router
 
 app.add_middleware(
     CORSMiddleware,
@@ -56,10 +59,40 @@ app.add_middleware(
 def health_check():
     return {"status": "healthy"}
 
+@app.get("/")
+def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "FinAgent API with Voice Support",
+        "version": "1.0.0",
+        "endpoints": {
+            "financial": "/api/financial",
+            "chat": "/api/router",
+            "transcription": "/api/transcribe",
+            "mcp_servers": "/api/mcp-servers",
+            "files": "/api/files",
+            "health": "/health"
+        },
+        "features": [
+            "Financial Analysis",
+            "Voice Input Support", 
+            "File Upload & Analysis",
+            "MCP Server Integration",
+            "Real-time Streaming"
+        ]
+    }
+
 @app.on_event("startup")
 async def startup_event():
     global mcp_processes, workflow_graph
     logger.info("Starting application initialization")
+
+    # Check for OpenAI API key for transcription service
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if openai_key:
+        logger.info("OpenAI API key found - Voice transcription enabled")
+    else:
+        logger.warning("OpenAI API key not found - Voice transcription will be disabled")
 
     # Use dependency inversion to avoid circular imports
     import importlib
